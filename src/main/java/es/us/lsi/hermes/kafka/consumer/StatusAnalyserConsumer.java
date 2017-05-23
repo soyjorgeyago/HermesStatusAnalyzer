@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import es.us.lsi.hermes.util.Utils;
+import java.io.File;
 import kafka.utils.ShutdownableThread;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -27,75 +28,81 @@ public class StatusAnalyserConsumer extends ShutdownableThread {
     private final KafkaConsumer<String, String> consumer;
     private final long pollTimeout;
     private final Gson gson;
-    private ICsvBeanWriter beanWriter  = null;
+    private ICsvBeanWriter beanWriter = null;
     private int recordsByFile = 0;
 
     public StatusAnalyserConsumer(long pollTimeout) {
         // Podrá ser interrumpible.
         super("StatusAnalyserConsumer", true);
-        LOG.log(Level.INFO, "Initializing the Status Analyser - Consumer");
+        LOG.log(Level.INFO, "StatusAnalyserConsumer() - Initializing the status analyser consumer");
         this.consumer = new KafkaConsumer<>(Main.getKafkaProperties());
         this.pollTimeout = pollTimeout;
         this.gson = new Gson();
-
-        // Add hook to close the writer
-        Runtime.getRuntime().addShutdownHook(new Thread(this::closeBeanWriter));
 
         Utils.createCsvFolders(Constants.RECORDS_FOLDER);
         createBeanWriter();
     }
 
-
     @Override
     public void doWork() {
-        //TODO Contemplar si se puede sacar el suscribe de aqui
+        // TODO: Study extracting the subscription from here.
         consumer.subscribe(Collections.singleton(Constants.TOPIC_SIMULATOR_STATUS));
-
+        
         ConsumerRecords<String, String> records = consumer.poll(pollTimeout);
         for (ConsumerRecord<String, String> record : records) {
 
-            // Extract POJO from Json
+            // Extract POJO from Json.
             SimulatorStatus status = gson.fromJson(record.value(), SimulatorStatus.class);
             status.setPcKey(record.key());
 
-            // Save POJO in CSV file
-            try {
-                beanWriter.write(status, SimulatorStatus.fields, SimulatorStatus.cellProcessors);
-                recordsByFile++;
-            }catch (IOException ex){
-                LOG.log(Level.SEVERE, "doWork - Error storing the Status in the CSV");
-            }
-
-            // If the maximum number of records is archived, change files
-            if(recordsByFile > Constants.MAX_RECORDS_BY_FILE) {
+            // If the maximum number of records is archived, close the current file and continue in a new file.
+            if (recordsByFile > Constants.MAX_RECORDS_BY_FILE) {
+                closeBeanWriter();
                 createBeanWriter();
                 recordsByFile = 0;
             }
+
+            try {
+                beanWriter.write(status, SimulatorStatus.fields, SimulatorStatus.cellProcessors);
+                recordsByFile++;
+                beanWriter.flush();
+            } catch (Exception ex) {
+                LOG.log(Level.SEVERE, "doWork() - Error storing the status in the CSV", ex);
+            }
         }
     }
 
-    private void createBeanWriter(){
-        if(beanWriter != null) {
+    private void createBeanWriter() {
+        if (beanWriter != null) {
             closeBeanWriter();
         }
 
-        String file = Constants.RECORDS_FOLDER + Constants.RECORDS_HEADER + System.currentTimeMillis() + ".csv";
+        String filePath = Constants.RECORDS_FOLDER + File.separator + Constants.RECORDS_HEADER + System.currentTimeMillis() + ".csv";
 
         try {
-            beanWriter = new CsvBeanWriter(new FileWriter(file, true), CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE);
+            beanWriter = new CsvBeanWriter(new FileWriter(filePath, true), CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE);
             beanWriter.writeHeader(SimulatorStatus.headers);
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, "exportToCSV() - Error exporting to CSV: " + file, ex);
+            LOG.log(Level.SEVERE, "createBeanWriter() - Error creating the CSV file: " + filePath, ex);
         }
     }
 
-    private void closeBeanWriter(){
+    private void closeBeanWriter() {
         try {
             beanWriter.flush();
             beanWriter.close();
-            LOG.log(Level.INFO, "closeBeanWriter() - 'beanWriter' closed");
-        }catch (IOException ex){
-            LOG.log(Level.SEVERE, "closeBeanWriter() - Error closing the 'writer'", ex);
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, "closeBeanWriter() - Error closing the CSV file", ex);
+        } finally {
+            beanWriter = null;
         }
     }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        closeBeanWriter();
+        shutdown();
+    }
+
 }

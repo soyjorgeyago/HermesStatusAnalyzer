@@ -11,25 +11,27 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
+    private static final String PROPERTIES_FILENAME = "Kafka.properties";
 
-    // Valores para la configuración del 'consumer' de Kafka.
     private static Properties kafkaProperties;
 
     public static void main(String[] args) {
-        LOG.log(Level.INFO, "Setting up Kafka");
-
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        
         try {
-            InputStream input = classLoader.getResourceAsStream("Kafka.properties");
+            InputStream input = classLoader.getResourceAsStream(PROPERTIES_FILENAME);
             kafkaProperties = new Properties();
             kafkaProperties.load(input);
         } catch (IOException ex) {
-            LOG.log(Level.SEVERE, "main() - Problems loading Kafka's property files", ex);
+            LOG.log(Level.SEVERE, "main() - Error loading properties file: " + PROPERTIES_FILENAME, ex);
+            return;
+        } catch (NullPointerException ex) {
+            LOG.log(Level.SEVERE, "main() - File \'{0}\' not found", PROPERTIES_FILENAME);
             return;
         }
 
         long pollTimeout = Long.parseLong(kafkaProperties.getProperty("consumer.poll.timeout.ms", "5000"));
-        LOG.log(Level.INFO, "Polling data every {0} milliseconds", pollTimeout);
+        LOG.log(Level.INFO, "main() - Polling data every {0} milliseconds", pollTimeout);
 
         StatusAnalyserConsumer statusAnalyserConsumer = new StatusAnalyserConsumer(pollTimeout);
         statusAnalyserConsumer.start();

@@ -10,10 +10,9 @@ import java.io.Serializable;
 /**
  * Clase con el estado de la simulación en cada segundo.
  */
-public class SimulatorStatus implements Serializable{
+public class SimulatorStatus implements Serializable {
 
     private String pcKey;
-
     private final long timestamp;
     private final int generated;
     private final int sent;
@@ -27,10 +26,11 @@ public class SimulatorStatus implements Serializable{
     private final int pausedSmartDrivers;
 
     public SimulatorStatus() {
-        this(System.currentTimeMillis(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        this(null, System.currentTimeMillis(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
-    public SimulatorStatus(long timestamp, int generated, int sent, int ok, int notOk, int errors, int recovered, int pending, int runningThreads, long currentSmartDriversDelay, int pausedSmartDrivers) {
+    public SimulatorStatus(String pcKey, long timestamp, int generated, int sent, int ok, int notOk, int errors, int recovered, int pending, int runningThreads, long currentSmartDriversDelay, int pausedSmartDrivers) {
+        this.pcKey = pcKey;
         this.timestamp = timestamp;
         this.generated = generated;
         this.sent = sent;
@@ -91,51 +91,51 @@ public class SimulatorStatus implements Serializable{
     public String getPcKey() {
         return pcKey;
     }
+
     public void setPcKey(String pcKey) {
         this.pcKey = pcKey;
     }
 
     // ------------------------- CSV IMP/EXP -------------------------
-
     public final static CellProcessor[] cellProcessors = new CellProcessor[]{
-            new StrNotNullOrEmpty(),
-            new ParseLong(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseInt(),
-            new ParseLong(),
-            new ParseInt()};
+        new StrNotNullOrEmpty(),
+        new ParseLong(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseInt(),
+        new ParseLong(),
+        new ParseInt()};
 
     public final static String[] fields = new String[]{
-            "pcKey",
-            "timestamp",
-            "generated",
-            "sent",
-            "ok",
-            "notOk",
-            "errors",
-            "recovered",
-            "pending",
-            "runningThreads",
-            "currentSmartDriversDelay",
-            "pausedSmartDrivers"};
+        "pcKey",
+        "timestamp",
+        "generated",
+        "sent",
+        "ok",
+        "notOk",
+        "errors",
+        "recovered",
+        "pending",
+        "runningThreads",
+        "currentSmartDriversDelay",
+        "pausedSmartDrivers"};
 
     public final static String[] headers = new String[]{
-            "PcKey",
-            "Timestamp",
-            "Generated",
-            "Sent",
-            "Ok",
-            "NotOk",
-            "Errors",
-            "Recovered",
-            "Pending",
-            "RunningThreads",
-            "CurrentSmartDriversDelay",
-            "PausedSmartDrivers"};
+        "PcKey",
+        "Timestamp",
+        "Generated",
+        "Sent",
+        "Ok",
+        "NotOk",
+        "Errors",
+        "Recovered",
+        "Pending",
+        "RunningThreads",
+        "CurrentSmartDriversDelay",
+        "PausedSmartDrivers"};
 }
