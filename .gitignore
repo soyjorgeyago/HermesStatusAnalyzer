@@ -44,4 +44,6 @@ build.xml
 
 # Project specific
 src/main/resources/Kafka.properties
+statuses_csv/
 manifest.mf
+
