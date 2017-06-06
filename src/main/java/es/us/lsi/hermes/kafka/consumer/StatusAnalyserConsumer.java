@@ -4,15 +4,7 @@ import com.google.gson.Gson;
 import es.us.lsi.hermes.Main;
 import es.us.lsi.hermes.analysis.SimulatorStatus;
 import es.us.lsi.hermes.util.Constants;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import es.us.lsi.hermes.util.Utils;
-import java.io.File;
 import kafka.utils.ShutdownableThread;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -20,6 +12,13 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StatusAnalyserConsumer extends ShutdownableThread {
 
@@ -50,6 +49,9 @@ public class StatusAnalyserConsumer extends ShutdownableThread {
         
         ConsumerRecords<String, String> records = consumer.poll(pollTimeout);
         for (ConsumerRecord<String, String> record : records) {
+
+            //FIXME
+            System.out.println("Status received");
 
             // Extract POJO from Json.
             SimulatorStatus status = gson.fromJson(record.value(), SimulatorStatus.class);
