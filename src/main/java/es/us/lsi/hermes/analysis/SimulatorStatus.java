@@ -1,11 +1,13 @@
 package es.us.lsi.hermes.analysis;
 
+import es.us.lsi.hermes.util.Constants;
 import org.supercsv.cellprocessor.ParseInt;
 import org.supercsv.cellprocessor.ParseLong;
 import org.supercsv.cellprocessor.constraint.StrNotNullOrEmpty;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Clase con el estado de la simulación en cada segundo.
@@ -14,6 +16,7 @@ public class SimulatorStatus implements Serializable {
 
     private String pcKey;
     private final long timestamp;
+    private final String formattedDateTime;
     private final int generated;
     private final int sent;
     private final int ok;
@@ -22,16 +25,18 @@ public class SimulatorStatus implements Serializable {
     private final int recovered;
     private final int pending;
     private final int runningThreads;
-    private final long currentSmartDriversDelay;
-    private final int pausedSmartDrivers;
+    private final long currentDriversDelay;
+    private final int activeDrivers;
+    private final int pausedDrivers;
 
     public SimulatorStatus() {
-        this(null, System.currentTimeMillis(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        this(null, System.currentTimeMillis(), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
-    public SimulatorStatus(String pcKey, long timestamp, int generated, int sent, int ok, int notOk, int errors, int recovered, int pending, int runningThreads, long currentSmartDriversDelay, int pausedSmartDrivers) {
+    public SimulatorStatus(String pcKey, long timestamp, int generated, int sent, int ok, int notOk, int errors, int recovered, int pending, int runningThreads, long currentDriversDelay, int activeDrivers, int pausedDrivers) {
         this.pcKey = pcKey;
         this.timestamp = timestamp;
+        this.formattedDateTime = Constants.sdf.format(new Date(timestamp));
         this.generated = generated;
         this.sent = sent;
         this.ok = ok;
@@ -40,14 +45,19 @@ public class SimulatorStatus implements Serializable {
         this.recovered = recovered;
         this.pending = pending;
         this.runningThreads = runningThreads;
-        this.currentSmartDriversDelay = currentSmartDriversDelay;
-        this.pausedSmartDrivers = pausedSmartDrivers;
+        this.currentDriversDelay = currentDriversDelay;
+        this.activeDrivers = activeDrivers;
+        this.pausedDrivers = pausedDrivers;
     }
 
     public long getTimestamp() {
         return timestamp;
     }
 
+    public String getFormattedDateTime() {
+        return formattedDateTime;
+    }
+    
     public int getGenerated() {
         return generated;
     }
@@ -80,12 +90,16 @@ public class SimulatorStatus implements Serializable {
         return runningThreads;
     }
 
-    public long getCurrentSmartDriversDelay() {
-        return currentSmartDriversDelay;
+    public long getCurrentDriversDelay() {
+        return currentDriversDelay;
+    }
+    
+    public int getActiveDrivers() {
+        return activeDrivers;
     }
 
-    public int getPausedSmartDrivers() {
-        return pausedSmartDrivers;
+    public int getPausedDrivers() {
+        return pausedDrivers;
     }
 
     public String getPcKey() {
@@ -100,6 +114,7 @@ public class SimulatorStatus implements Serializable {
     public final static CellProcessor[] cellProcessors = new CellProcessor[]{
         new StrNotNullOrEmpty(),
         new ParseLong(),
+        new StrNotNullOrEmpty(),
         new ParseInt(),
         new ParseInt(),
         new ParseInt(),
@@ -109,11 +124,13 @@ public class SimulatorStatus implements Serializable {
         new ParseInt(),
         new ParseInt(),
         new ParseLong(),
+        new ParseInt(),
         new ParseInt()};
 
     public final static String[] fields = new String[]{
         "pcKey",
         "timestamp",
+        "formattedDateTime",
         "generated",
         "sent",
         "ok",
@@ -122,12 +139,14 @@ public class SimulatorStatus implements Serializable {
         "recovered",
         "pending",
         "runningThreads",
-        "currentSmartDriversDelay",
-        "pausedSmartDrivers"};
+        "currentDriversDelay",
+        "activeDrivers",
+        "pausedDrivers"};
 
     public final static String[] headers = new String[]{
         "PcKey",
         "Timestamp",
+        "Time",
         "Generated",
         "Sent",
         "Ok",
@@ -136,6 +155,7 @@ public class SimulatorStatus implements Serializable {
         "Recovered",
         "Pending",
         "RunningThreads",
-        "CurrentSmartDriversDelay",
-        "PausedSmartDrivers"};
+        "CurrentDriversDelay",
+        "ActiveDrivers",
+        "PausedDrivers"};
 }

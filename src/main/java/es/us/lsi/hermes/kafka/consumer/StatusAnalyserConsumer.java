@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import es.us.lsi.hermes.util.Utils;
 import java.io.File;
+import java.util.Date;
 import kafka.utils.ShutdownableThread;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -38,6 +39,7 @@ public class StatusAnalyserConsumer extends ShutdownableThread {
         this.consumer = new KafkaConsumer<>(Main.getKafkaProperties());
         this.pollTimeout = pollTimeout;
         this.gson = new Gson();
+        consumer.subscribe(Collections.singleton(Constants.TOPIC_SIMULATOR_STATUS));
 
         Utils.createCsvFolders(Constants.RECORDS_FOLDER);
         createBeanWriter();
@@ -45,9 +47,6 @@ public class StatusAnalyserConsumer extends ShutdownableThread {
 
     @Override
     public void doWork() {
-        // TODO: Study extracting the subscription from here.
-        consumer.subscribe(Collections.singleton(Constants.TOPIC_SIMULATOR_STATUS));
-        
         ConsumerRecords<String, String> records = consumer.poll(pollTimeout);
         for (ConsumerRecord<String, String> record : records) {
 
@@ -77,7 +76,7 @@ public class StatusAnalyserConsumer extends ShutdownableThread {
             closeBeanWriter();
         }
 
-        String filePath = Constants.RECORDS_FOLDER + File.separator + Constants.RECORDS_HEADER + System.currentTimeMillis() + ".csv";
+        String filePath = Constants.RECORDS_FOLDER + File.separator + Constants.dfFile.format(new Date()) + ".csv";
 
         try {
             beanWriter = new CsvBeanWriter(new FileWriter(filePath, true), CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE);
