@@ -35,6 +35,8 @@ public class Main {
 
         StatusAnalyserConsumer statusAnalyserConsumer = new StatusAnalyserConsumer(pollTimeout);
         statusAnalyserConsumer.start();
+//        SparkConsumer sparkConsumer = new SparkConsumer(pollTimeout);
+//        sparkConsumer.start();
     }
 
     public static Properties getKafkaProperties() {
